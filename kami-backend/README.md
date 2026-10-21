@@ -1,3 +1,96 @@
+# KAMI Assessment
+
+Laravel 12 API and React/Vite frontend for the KAMI assessment application.
+
+## Deploy to Vercel
+
+This project uses the community `vercel-php` runtime because Vercel does not provide an official PHP runtime. The runtime configuration is in `vercel.json`; the PHP function entrypoint is `api/index.php`.
+
+Before deploying, prepare:
+
+- A managed MySQL database reachable from Vercel Functions.
+- An S3-compatible bucket for evidence uploads. Vercel Function filesystems are temporary; local uploads do not persist between invocations.
+- A production `APP_KEY` generated with `php artisan key:generate --show`.
+
+### Import the project
+
+1. Push this repository to GitHub. Do not commit `.env` or credentials.
+2. In Vercel, import the repository and set the project root to `kami-backend` if the Laravel app is inside a parent repository folder.
+3. Use the `Other` framework preset. `vercel.json` runs `npm run vercel-build`, creates the Vite build, and stages public assets in `vercel-public` while excluding PHP entrypoints and local storage.
+4. Add the production environment variables below for Production, Preview, and Development as needed.
+
+### Environment variables
+
+Set these in Vercel Project Settings. Never put production secrets in `vercel.json` or Git.
+
+```text
+APP_NAME=Indeks KAMI
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://YOUR-PROJECT.vercel.app
+APP_KEY=base64:GENERATED_KEY
+
+DB_CONNECTION=mysql
+DB_HOST=YOUR_DATABASE_HOST
+DB_PORT=3306
+DB_DATABASE=YOUR_DATABASE_NAME
+DB_USERNAME=YOUR_DATABASE_USER
+DB_PASSWORD=YOUR_DATABASE_PASSWORD
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_SECURE_COOKIE=true
+SESSION_SAME_SITE=lax
+SANCTUM_STATEFUL_DOMAINS=YOUR-PROJECT.vercel.app
+
+CACHE_STORE=database
+QUEUE_CONNECTION=sync
+LOG_CHANNEL=stderr
+
+EVIDENCE_FILESYSTEM_DRIVER=s3
+AWS_ACCESS_KEY_ID=YOUR_S3_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY=YOUR_S3_SECRET
+AWS_DEFAULT_REGION=YOUR_BUCKET_REGION
+AWS_BUCKET=YOUR_BUCKET_NAME
+AWS_URL=https://YOUR_PUBLIC_BUCKET_URL
+AWS_ENDPOINT=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+```
+
+Add the final custom domain to `SANCTUM_STATEFUL_DOMAINS` too, without `https://`. For a regional S3-compatible provider, set its endpoint and path-style setting according to that provider's instructions. The evidence URLs are public in the current application; use a private bucket only after changing the file URL/authorization flow.
+
+### Initialize the database
+
+After setting environment variables, run these commands once from a trusted environment that can connect to the production database:
+
+```bash
+php artisan migrate --force
+php artisan db:seed --class=QuestionSeeder --force
+```
+
+Do not use `migrate:fresh` on a database containing data. Do not run migrations from every serverless request.
+
+### Deploy and smoke-test
+
+Deploy from the Vercel dashboard or with the Vercel CLI. After deployment, verify `/login`, registration/login, assessment creation, answer saving, calculation, result display, and evidence upload/download. Check the Vercel Function logs if a request fails.
+
+The PHP runtime is community-maintained, not an official Vercel runtime. Verify the deployment with your actual Vercel account before using it for production data.
+
+## Local development
+
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
+
+Run Laravel from the project directory in a separate terminal:
+
+```powershell
+php artisan serve
+```
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

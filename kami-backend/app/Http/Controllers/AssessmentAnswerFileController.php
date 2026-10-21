@@ -133,7 +133,7 @@ class AssessmentAnswerFileController extends Controller
             $uploadedFile->storeAs(
                 'evidence',
                 $storedFileName,
-                'public'
+                'evidence'
             );
 
         /*
@@ -212,10 +212,10 @@ class AssessmentAnswerFileController extends Controller
 
         if (
             $file->file_path &&
-            Storage::disk('public')
+            Storage::disk('evidence')
                 ->exists($file->file_path)
         ) {
-            Storage::disk('public')
+            Storage::disk('evidence')
                 ->delete(
                     $file->file_path
                 );
@@ -297,12 +297,11 @@ class AssessmentAnswerFileController extends Controller
                     : 0,
 
             'url' =>
-                asset(
-                    'storage/' . ltrim(
-                        $file->file_path,
-                        '/'
-                    )
-                ),
+                rtrim(
+                    config('filesystems.disks.evidence.url')
+                        ?: rtrim(config('app.url'), '/').'/storage',
+                    '/'
+                ).'/'.ltrim($file->file_path, '/'),
 
             'created_at' =>
                 $file->created_at,
