@@ -43,7 +43,7 @@ SESSION_DRIVER=database
 SESSION_LIFETIME=120
 SESSION_SECURE_COOKIE=true
 SESSION_SAME_SITE=lax
-SANCTUM_STATEFUL_DOMAINS=YOUR-PROJECT.vercel.app
+SANCTUM_STATEFUL_DOMAINS=website-assesment.vercel.app
 
 CACHE_STORE=database
 QUEUE_CONNECTION=sync
@@ -59,7 +59,7 @@ AWS_ENDPOINT=
 AWS_USE_PATH_STYLE_ENDPOINT=false
 ```
 
-Add the final custom domain to `SANCTUM_STATEFUL_DOMAINS` too, without `https://`. For a regional S3-compatible provider, set its endpoint and path-style setting according to that provider's instructions. The evidence URLs are public in the current application; use a private bucket only after changing the file URL/authorization flow.
+Vercel deployment and production domains are added to Sanctum's stateful domains automatically. Add any custom domain to `SANCTUM_STATEFUL_DOMAINS` too, separated by commas and without `https://`. Keep `SESSION_DOMAIN` unset so the session cookie stays restricted to the current host. For a regional S3-compatible provider, set its endpoint and path-style setting according to that provider's instructions. The evidence URLs are public in the current application; use a private bucket only after changing the file URL/authorization flow.
 
 Set `APP_URL` to the HTTPS URL that users open. The application also trusts Vercel's forwarded protocol header in production so Laravel generates HTTPS asset URLs when requests arrive through Vercel's HTTPS proxy.
 

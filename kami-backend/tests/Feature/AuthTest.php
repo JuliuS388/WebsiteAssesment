@@ -50,6 +50,27 @@ class AuthTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_vercel_frontend_session_authenticates_api_requests(): void
+    {
+        $user = User::factory()->create([
+            'password' => 'password123',
+        ]);
+
+        config([
+            'sanctum.stateful' => ['website-assesment.vercel.app'],
+        ]);
+
+        $this->postJson('/auth/login', [
+            'email' => $user->email,
+            'password' => 'password123',
+        ])->assertOk();
+
+        $this->withHeader('Origin', 'https://website-assesment.vercel.app')
+            ->getJson('/api/assessments')
+            ->assertOk()
+            ->assertJsonPath('total', 0);
+    }
+
     public function test_login_rejects_invalid_credentials(): void
     {
         $this->postJson('/auth/login', [

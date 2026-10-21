@@ -5,6 +5,17 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Laravel\Sanctum\Http\Middleware\AuthenticateSession;
 use Laravel\Sanctum\Sanctum;
 
+$statefulDomains = explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
+    '%s%s',
+    'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
+    Sanctum::currentApplicationUrlWithPort(),
+)));
+
+$vercelDomains = array_filter([
+    env('VERCEL_URL'),
+    env('VERCEL_PROJECT_PRODUCTION_URL'),
+]);
+
 return [
 
     /*
@@ -18,12 +29,10 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
-    ))),
+    'stateful' => array_values(array_unique(array_filter(array_map(
+        'trim',
+        array_merge($statefulDomains, $vercelDomains),
+    )))),
 
     /*
     |--------------------------------------------------------------------------
