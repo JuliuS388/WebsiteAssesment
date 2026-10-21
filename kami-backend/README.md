@@ -19,6 +19,8 @@ Before deploying, prepare:
 3. Use the `Other` framework preset. `vercel.json` runs `npm run vercel-build`, creates the Vite build, and stages public assets in `vercel-public` while excluding PHP entrypoints and local storage.
 4. Add the production environment variables below for Production, Preview, and Development as needed.
 
+Vercel removes the `/api` function-directory prefix before dispatching the PHP request. The Laravel API routes therefore use no additional prefix on Vercel, while keeping `/api` locally.
+
 ### Environment variables
 
 Set these in Vercel Project Settings. Never put production secrets in `vercel.json` or Git.
