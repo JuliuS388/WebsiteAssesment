@@ -27,7 +27,7 @@ Set these in Vercel Project Settings. Never put production secrets in `vercel.js
 APP_NAME=Indeks KAMI
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://YOUR-PROJECT.vercel.app
+APP_URL=https://website-assesment.vercel.app
 APP_KEY=base64:GENERATED_KEY
 
 DB_CONNECTION=mysql
@@ -58,6 +58,8 @@ AWS_USE_PATH_STYLE_ENDPOINT=false
 ```
 
 Add the final custom domain to `SANCTUM_STATEFUL_DOMAINS` too, without `https://`. For a regional S3-compatible provider, set its endpoint and path-style setting according to that provider's instructions. The evidence URLs are public in the current application; use a private bucket only after changing the file URL/authorization flow.
+
+Set `APP_URL` to the HTTPS URL that users open. The application also trusts Vercel's forwarded protocol header in production so Laravel generates HTTPS asset URLs when requests arrive through Vercel's HTTPS proxy.
 
 ### Initialize the database
 
