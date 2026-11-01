@@ -88,20 +88,22 @@ class AssessmentAnswerFileController extends Controller
         $diskConfig = config('filesystems.disks.evidence');
 
         if (
-            app()->environment('production')
+            $diskConfig['require_s3']
             && (
                 $diskConfig['driver'] !== 's3'
                 || empty($diskConfig['bucket'])
                 || empty($diskConfig['region'])
+                || empty($diskConfig['key'])
+                || empty($diskConfig['secret'])
             )
         ) {
             return response()->json([
                 'success' => false,
                 'message' =>
                     'Penyimpanan evidence belum dikonfigurasi. '
-                    .'Atur EVIDENCE_FILESYSTEM_DRIVER=s3, '
-                    .'AWS_BUCKET, dan AWS_DEFAULT_REGION '
-                    .'pada environment deployment.',
+                    .'Atur AWS_BUCKET, AWS_DEFAULT_REGION, '
+                    .'AWS_ACCESS_KEY_ID, dan AWS_SECRET_ACCESS_KEY '
+                    .'pada environment Vercel.',
             ], 503);
         }
 

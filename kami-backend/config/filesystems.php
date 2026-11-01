@@ -48,10 +48,17 @@ return [
         ],
 
         'evidence' => [
-            'driver' => env(
-                'EVIDENCE_FILESYSTEM_DRIVER',
-                env('APP_ENV') === 'production' ? 's3' : 'local'
-            ),
+            'driver' => env('VERCEL')
+                ? 's3'
+                : env(
+                    'EVIDENCE_FILESYSTEM_DRIVER',
+                    env('APP_ENV') === 'production'
+                        ? 's3'
+                        : 'local'
+                ),
+            'require_s3' =>
+                (bool) env('VERCEL')
+                || env('APP_ENV') === 'production',
             'root' => storage_path('app/public'),
             'url' => env('AWS_URL'),
             'visibility' => 'private',

@@ -70,7 +70,9 @@ class AssessmentAnswerFileTest extends TestCase
 
     public function test_production_upload_requires_configured_persistent_storage(): void
     {
-        $this->app['env'] = 'production';
+        config([
+            'filesystems.disks.evidence.require_s3' => true,
+        ]);
 
         $user = User::factory()->create();
         $assessment = Assessment::create([
@@ -105,9 +107,9 @@ class AssessmentAnswerFileTest extends TestCase
             ->assertJsonPath(
                 'message',
                 'Penyimpanan evidence belum dikonfigurasi. '
-                .'Atur EVIDENCE_FILESYSTEM_DRIVER=s3, '
-                .'AWS_BUCKET, dan AWS_DEFAULT_REGION '
-                .'pada environment deployment.'
+                .'Atur AWS_BUCKET, AWS_DEFAULT_REGION, '
+                .'AWS_ACCESS_KEY_ID, dan AWS_SECRET_ACCESS_KEY '
+                .'pada environment Vercel.'
             );
     }
 }
