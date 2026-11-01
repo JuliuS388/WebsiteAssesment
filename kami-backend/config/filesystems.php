@@ -48,11 +48,14 @@ return [
         ],
 
         'evidence' => [
-            'driver' => env('EVIDENCE_FILESYSTEM_DRIVER', 'local'),
+            'driver' => env(
+                'EVIDENCE_FILESYSTEM_DRIVER',
+                env('APP_ENV') === 'production' ? 's3' : 'local'
+            ),
             'root' => storage_path('app/public'),
             'url' => env('AWS_URL'),
-            'visibility' => 'public',
-            'throw' => false,
+            'visibility' => 'private',
+            'throw' => true,
             'report' => false,
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),

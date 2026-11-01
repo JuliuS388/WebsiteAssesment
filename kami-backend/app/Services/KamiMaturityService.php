@@ -744,10 +744,10 @@ class KamiMaturityService
          * MATURITY KESELURUHAN
          * ======================================================
          *
-         * Hanya lima area inti yang menentukan
-         * rentang maturity keseluruhan:
+         * Area II - VII menentukan rentang
+         * maturity keseluruhan:
          *
-         * II - VI
+         * II - VII
          */
         $overall =
             $this->calculateOverallMaturity(
@@ -1000,6 +1000,7 @@ class KamiMaturityService
                 'IV',
                 'V',
                 'VI',
+                'VII',
             ] as $category
         ) {
 

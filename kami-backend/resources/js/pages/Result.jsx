@@ -55,6 +55,7 @@ const MATURITY_CATEGORY_ORDER = [
     'IV',
     'V',
     'VI',
+    'VII',
 ];
 
 function Result() {
@@ -1192,7 +1193,7 @@ function Result() {
                             lineHeight: '1.6',
                         }}
                     >
-                        Tingkat kematangan area II–VI
+                        Tingkat kematangan area II–VII
                         digunakan sebagai dasar
                         penentuan rentang tingkat
                         kematangan keseluruhan.

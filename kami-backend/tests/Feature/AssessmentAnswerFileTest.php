@@ -67,4 +67,47 @@ class AssessmentAnswerFileTest extends TestCase
             ->assertHeader('content-type', 'application/pdf')
             ->assertHeader('content-disposition', 'inline; filename=evidence.pdf');
     }
+
+    public function test_production_upload_requires_configured_persistent_storage(): void
+    {
+        $this->app['env'] = 'production';
+
+        $user = User::factory()->create();
+        $assessment = Assessment::create([
+            'user_id' => $user->id,
+            'school_name' => 'Sekolah Tes',
+            'respondent_name' => 'Responden Tes',
+            'status' => 'draft',
+        ]);
+        $question = Question::create([
+            'category' => 'I',
+            'question_number' => '1.1',
+            'kami_level' => 1,
+            'question' => 'Pertanyaan tes',
+            'answer_type' => 'implementation',
+        ]);
+        $answer = AssessmentAnswer::create([
+            'assessment_id' => $assessment->id,
+            'question_id' => $question->id,
+            'answer' => 'Diterapkan',
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(
+                "/api/assessments/{$assessment->id}/answers/{$answer->id}/files",
+                [
+                    'file' => UploadedFile::fake()
+                        ->create('evidence.pdf', 10, 'application/pdf'),
+                ]
+            )
+            ->assertServiceUnavailable()
+            ->assertJsonPath('success', false)
+            ->assertJsonPath(
+                'message',
+                'Penyimpanan evidence belum dikonfigurasi. '
+                .'Atur EVIDENCE_FILESYSTEM_DRIVER=s3, '
+                .'AWS_BUCKET, dan AWS_DEFAULT_REGION '
+                .'pada environment deployment.'
+            );
+    }
 }

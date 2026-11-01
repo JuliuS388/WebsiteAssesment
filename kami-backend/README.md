@@ -9,7 +9,7 @@ This project uses the community `vercel-php` runtime because Vercel does not pro
 Before deploying, prepare:
 
 - A managed MySQL database reachable from Vercel Functions.
-- An S3-compatible bucket for evidence uploads. Vercel Function filesystems are temporary; local uploads do not persist between invocations.
+- An S3-compatible bucket for evidence uploads. Vercel Function filesystems are read-only/temporary; local uploads do not persist between invocations. Production defaults to the S3 evidence disk and rejects uploads with a clear error if its bucket or region is missing.
 - A production `APP_KEY` generated with `php artisan key:generate --show`.
 
 ### Import the project
@@ -54,12 +54,11 @@ AWS_ACCESS_KEY_ID=YOUR_S3_ACCESS_KEY
 AWS_SECRET_ACCESS_KEY=YOUR_S3_SECRET
 AWS_DEFAULT_REGION=YOUR_BUCKET_REGION
 AWS_BUCKET=YOUR_BUCKET_NAME
-AWS_URL=https://YOUR_PUBLIC_BUCKET_URL
 AWS_ENDPOINT=
 AWS_USE_PATH_STYLE_ENDPOINT=false
 ```
 
-Vercel deployment and production domains are added to Sanctum's stateful domains automatically. Add any custom domain to `SANCTUM_STATEFUL_DOMAINS` too, separated by commas and without `https://`. Keep `SESSION_DOMAIN` unset so the session cookie stays restricted to the current host. For a regional S3-compatible provider, set its endpoint and path-style setting according to that provider's instructions. The evidence URLs are public in the current application; use a private bucket only after changing the file URL/authorization flow.
+Vercel deployment and production domains are added to Sanctum's stateful domains automatically. Add any custom domain to `SANCTUM_STATEFUL_DOMAINS` too, separated by commas and without `https://`. Keep `SESSION_DOMAIN` unset so the session cookie stays restricted to the current host. Evidence is read through the authenticated application endpoint and stored as private objects, so the S3-compatible bucket can remain private. Set `LOG_CHANNEL=stderr` on Vercel so Laravel logs go to the function logs rather than the read-only filesystem. For a regional S3-compatible provider, set its endpoint and path-style setting according to that provider's instructions.
 
 Set `APP_URL` to the HTTPS URL that users open. The application also trusts Vercel's forwarded protocol header in production so Laravel generates HTTPS asset URLs when requests arrive through Vercel's HTTPS proxy.
 

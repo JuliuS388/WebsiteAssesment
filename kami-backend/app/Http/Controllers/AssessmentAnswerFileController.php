@@ -85,6 +85,26 @@ class AssessmentAnswerFileController extends Controller
             $answer
         );
 
+        $diskConfig = config('filesystems.disks.evidence');
+
+        if (
+            app()->environment('production')
+            && (
+                $diskConfig['driver'] !== 's3'
+                || empty($diskConfig['bucket'])
+                || empty($diskConfig['region'])
+            )
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'Penyimpanan evidence belum dikonfigurasi. '
+                    .'Atur EVIDENCE_FILESYSTEM_DRIVER=s3, '
+                    .'AWS_BUCKET, dan AWS_DEFAULT_REGION '
+                    .'pada environment deployment.',
+            ], 503);
+        }
+
         /*
         |--------------------------------------------------------------------------
         | Cek jumlah file yang sudah tersimpan

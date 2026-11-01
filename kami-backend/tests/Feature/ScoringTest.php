@@ -54,4 +54,55 @@ class ScoringTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.areas.V.score', 9);
     }
+
+    public function test_category_seven_maturity_is_included_in_overall_maturity_range(): void
+    {
+        $user = User::factory()->create();
+        $assessment = Assessment::create([
+            'user_id' => $user->id,
+            'school_name' => 'Sekolah Tes',
+            'respondent_name' => 'Responden Tes',
+            'status' => 'draft',
+        ]);
+
+        $categoryTwoQuestion = Question::create([
+            'category' => 'II',
+            'question_number' => '2.1',
+            'kami_level' => 1,
+            'security_category' => 'II',
+            'question' => 'Pertanyaan tata kelola',
+            'answer_type' => 'implementation',
+        ]);
+        $categorySevenQuestion = Question::create([
+            'category' => 'VII',
+            'question_number' => '7.1',
+            'kami_level' => 2,
+            'security_category' => 'IV',
+            'question' => 'Pertanyaan perlindungan data pribadi',
+            'answer_type' => 'implementation',
+        ]);
+
+        AssessmentAnswer::create([
+            'assessment_id' => $assessment->id,
+            'question_id' => $categoryTwoQuestion->id,
+            'answer' => 'Tidak Dilakukan',
+        ]);
+        AssessmentAnswer::create([
+            'assessment_id' => $assessment->id,
+            'question_id' => $categorySevenQuestion->id,
+            'answer' => 'Diterapkan Secara Menyeluruh',
+        ]);
+
+        $this->actingAs($user)
+            ->postJson("/api/assessments/{$assessment->id}/calculate")
+            ->assertOk()
+            ->assertJsonPath(
+                'data.maturity.areas.VII.level',
+                'IV'
+            )
+            ->assertJsonPath(
+                'data.maturity.overall.maximum',
+                'IV'
+            );
+    }
 }
