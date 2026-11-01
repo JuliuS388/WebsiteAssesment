@@ -2061,19 +2061,78 @@ function AssessmentKAMI() {
                                                     '7px',
                                             }}
                                         >
-                                            <a
-                                                href={
-                                                    file.url
-                                                }
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                {
-                                                    file.original_name
-                                                }
-                                            </a>
+                                                <div
+                                                    style={{
+                                                        display:
+                                                            'flex',
+                                                        alignItems:
+                                                            'center',
+                                                        gap:
+                                                            '10px',
+                                                        minWidth:
+                                                            0,
+                                                    }}
+                                                >
+                                                    {file.mime_type?.startsWith(
+                                                        'image/'
+                                                    ) && (
+                                                        <a
+                                                            href={
+                                                                file.url
+                                                            }
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            aria-label={`Buka ${file.original_name}`}
+                                                        >
+                                                            <img
+                                                                src={
+                                                                    file.url
+                                                                }
+                                                                alt={
+                                                                    file.original_name
+                                                                }
+                                                                style={{
+                                                                    width:
+                                                                        '48px',
+                                                                    height:
+                                                                        '48px',
+                                                                    objectFit:
+                                                                        'cover',
+                                                                    borderRadius:
+                                                                        '6px',
+                                                                }}
+                                                            />
+                                                        </a>
+                                                    )}
 
-                                            <button
+                                                    <a
+                                                        href={
+                                                            file.url
+                                                        }
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        {
+                                                            file.original_name
+                                                        }
+                                                    </a>
+
+                                                    <a
+                                                        href={`${file.url}?download=1`}
+                                                        style={{
+                                                            color:
+                                                                '#1d4ed8',
+                                                            fontSize:
+                                                                '13px',
+                                                            whiteSpace:
+                                                                'nowrap',
+                                                        }}
+                                                    >
+                                                        Unduh
+                                                    </a>
+                                                </div>
+
+                                                <button
                                                 onClick={() =>
                                                     deleteExistingFile(
                                                         file

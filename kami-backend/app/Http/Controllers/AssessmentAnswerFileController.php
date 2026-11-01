@@ -50,6 +50,7 @@ class AssessmentAnswerFileController extends Controller
      * Membuka file evidence dari satu jawaban.
      */
     public function show(
+        Request $request,
         Assessment $assessment,
         AssessmentAnswer $answer,
         AssessmentAnswerFile $file
@@ -79,7 +80,9 @@ class AssessmentAnswerFileController extends Controller
                     ?: 'application/octet-stream',
                 'Content-Disposition' =>
                     HeaderUtils::makeDisposition(
-                        'inline',
+                        $request->boolean('download')
+                            ? 'attachment'
+                            : 'inline',
                         $file->original_name
                     ),
                 'X-Content-Type-Options' =>

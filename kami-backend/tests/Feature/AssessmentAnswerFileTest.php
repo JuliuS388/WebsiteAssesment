@@ -36,7 +36,7 @@ class AssessmentAnswerFileTest extends TestCase
             'answer' => 'Diterapkan',
         ]);
 
-        $fileContents = "%PDF-1.4\nEvidence\0contents";
+        $fileContents = "%PDF-1.4\nEvidence\0contents\xFF\xFE";
 
         $uploadResponse = $this->actingAs($user)
             ->post(
@@ -79,6 +79,11 @@ class AssessmentAnswerFileTest extends TestCase
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf')
             ->assertHeader('content-disposition', 'inline; filename=evidence.pdf')
+            ->assertContent($fileContents);
+
+        $this->get($fileUrl.'?download=1')
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename=evidence.pdf')
             ->assertContent($fileContents);
     }
 
