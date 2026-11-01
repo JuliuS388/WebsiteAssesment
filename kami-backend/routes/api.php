@@ -80,6 +80,11 @@ Route::middleware(['auth:sanctum', EnsureAssessmentOwner::class])->group(functio
         [AssessmentAnswerFileController::class, 'index']
     );
 
+    Route::get(
+        '/assessments/{assessment}/answers/{answer}/files/{file}',
+        [AssessmentAnswerFileController::class, 'show']
+    )->name('assessment-answer-files.show');
+
     Route::post(
         '/assessments/{assessment}/answers/{answer}/files',
         [AssessmentAnswerFileController::class, 'store']

@@ -37,6 +37,38 @@ class AssessmentAnswerFileController extends Controller
     }
 
     /**
+     * Membuka file evidence dari satu jawaban.
+     */
+    public function show(
+        Assessment $assessment,
+        AssessmentAnswer $answer,
+        AssessmentAnswerFile $file
+    ) {
+        $this->validateAnswerOwnership(
+            $assessment,
+            $answer
+        );
+
+        if (
+            $file->assessment_answer_id
+            !== $answer->id
+        ) {
+            abort(404);
+        }
+
+        return Storage::disk('evidence')->response(
+            $file->file_path,
+            $file->original_name,
+            [
+                'Content-Type' =>
+                    $file->mime_type
+                    ?: 'application/octet-stream',
+            ],
+            'inline'
+        );
+    }
+
+    /**
      * Upload satu file evidence.
      *
      * File bersifat OPSIONAL.
@@ -297,11 +329,12 @@ class AssessmentAnswerFileController extends Controller
                     : 0,
 
             'url' =>
-                rtrim(
-                    config('filesystems.disks.evidence.url')
-                        ?: rtrim(config('app.url'), '/').'/storage',
-                    '/'
-                ).'/'.ltrim($file->file_path, '/'),
+                '/api/assessments/'
+                .$file->assessmentAnswer->assessment_id
+                .'/answers/'
+                .$file->assessment_answer_id
+                .'/files/'
+                .$file->id,
 
             'created_at' =>
                 $file->created_at,

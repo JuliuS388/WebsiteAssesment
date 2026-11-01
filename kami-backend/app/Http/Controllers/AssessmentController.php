@@ -88,6 +88,27 @@ class AssessmentController extends Controller
             'additionalAnswers.question',
         ]);
 
+        $assessment->answers->each(
+            function ($answer) use ($assessment) {
+                $answer->files->each(
+                    function ($file) use (
+                        $assessment,
+                        $answer
+                    ) {
+                        $file->setAttribute(
+                            'url',
+                            '/api/assessments/'
+                            .$assessment->id
+                            .'/answers/'
+                            .$answer->id
+                            .'/files/'
+                            .$file->id
+                        );
+                    }
+                );
+            }
+        );
+
         return response()->json([
             'success' => true,
             'data' => $assessment,
