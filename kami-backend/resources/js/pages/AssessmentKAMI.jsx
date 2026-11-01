@@ -587,14 +587,14 @@ function AssessmentKAMI() {
             selected.find(
                 (file) =>
                     file.size >
-                    10 *
+                    4 *
                         1024 *
                         1024
             );
 
         if (invalidFile) {
             setError(
-                `File "${invalidFile.name}" melebihi batas 10 MB.`
+                `File "${invalidFile.name}" melebihi batas 4 MB.`
             );
 
             event.target.value = '';
@@ -1984,7 +1984,7 @@ function AssessmentKAMI() {
                                 >
                                     Maksimal 5 file,
                                     masing-masing
-                                    maksimal 10 MB.
+                                    maksimal 4 MB.
                                 </div>
 
                                 {currentSelectedFiles.map(

@@ -6,7 +6,7 @@ use App\Models\Assessment;
 use App\Models\AssessmentAnswer;
 use App\Models\AssessmentAnswerFile;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class AssessmentAnswerFileController extends Controller
 {
@@ -24,6 +24,16 @@ class AssessmentAnswerFileController extends Controller
         );
 
         $files = $answer->files()
+            ->select([
+                'id',
+                'assessment_answer_id',
+                'original_name',
+                'file_name',
+                'file_path',
+                'mime_type',
+                'file_size',
+                'created_at',
+            ])
             ->orderBy('id')
             ->get()
             ->map(function ($file) {
@@ -56,15 +66,25 @@ class AssessmentAnswerFileController extends Controller
             abort(404);
         }
 
-        return Storage::disk('evidence')->response(
-            $file->file_path,
-            $file->original_name,
+        if ($file->file_contents === null) {
+            abort(404, 'Isi file evidence tidak tersedia di database.');
+        }
+
+        return response(
+            $file->file_contents,
+            200,
             [
                 'Content-Type' =>
                     $file->mime_type
                     ?: 'application/octet-stream',
-            ],
-            'inline'
+                'Content-Disposition' =>
+                    HeaderUtils::makeDisposition(
+                        'inline',
+                        $file->original_name
+                    ),
+                'X-Content-Type-Options' =>
+                    'nosniff',
+            ]
         );
     }
 
@@ -84,28 +104,6 @@ class AssessmentAnswerFileController extends Controller
             $assessment,
             $answer
         );
-
-        $diskConfig = config('filesystems.disks.evidence');
-
-        if (
-            $diskConfig['require_s3']
-            && (
-                $diskConfig['driver'] !== 's3'
-                || empty($diskConfig['bucket'])
-                || empty($diskConfig['region'])
-                || empty($diskConfig['key'])
-                || empty($diskConfig['secret'])
-            )
-        ) {
-            return response()->json([
-                'success' => false,
-                'message' =>
-                    'Penyimpanan evidence belum dikonfigurasi. '
-                    .'Atur AWS_BUCKET, AWS_DEFAULT_REGION, '
-                    .'AWS_ACCESS_KEY_ID, dan AWS_SECRET_ACCESS_KEY '
-                    .'pada environment Vercel.',
-            ], 503);
-        }
 
         /*
         |--------------------------------------------------------------------------
@@ -135,7 +133,7 @@ class AssessmentAnswerFileController extends Controller
             'file' => [
                 'nullable',
                 'file',
-                'max:10240',
+                'max:4096',
                 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx',
             ],
         ], [
@@ -143,7 +141,7 @@ class AssessmentAnswerFileController extends Controller
                 'File evidence tidak valid.',
 
             'file.max' =>
-                'Ukuran file maksimal 10 MB.',
+                'Ukuran file maksimal 4 MB.',
 
             'file.mimes' =>
                 'Format file yang diperbolehkan: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX.',
@@ -183,16 +181,9 @@ class AssessmentAnswerFileController extends Controller
             $uploadedFile
                 ->getClientOriginalExtension();
 
-        $storedPath =
-            $uploadedFile->storeAs(
-                'evidence',
-                $storedFileName,
-                'evidence'
-            );
-
         /*
         |--------------------------------------------------------------------------
-        | Simpan informasi file ke database
+        | Simpan file dan informasi ke database
         |--------------------------------------------------------------------------
         */
 
@@ -208,7 +199,7 @@ class AssessmentAnswerFileController extends Controller
                 $storedFileName,
 
             'file_path' =>
-                $storedPath,
+                'database/evidence/'.$storedFileName,
 
             'mime_type' =>
                 $uploadedFile
@@ -217,6 +208,9 @@ class AssessmentAnswerFileController extends Controller
             'file_size' =>
                 $uploadedFile
                     ->getSize(),
+
+            'file_contents' =>
+                $uploadedFile->getContent(),
         ]);
 
         return response()->json([
@@ -260,24 +254,7 @@ class AssessmentAnswerFileController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Hapus file fisik
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $file->file_path &&
-            Storage::disk('evidence')
-                ->exists($file->file_path)
-        ) {
-            Storage::disk('evidence')
-                ->delete(
-                    $file->file_path
-                );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Hapus record database
+        | Hapus file dan kontennya dari database
         |--------------------------------------------------------------------------
         */
 

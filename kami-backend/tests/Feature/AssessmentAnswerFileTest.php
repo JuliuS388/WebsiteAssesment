@@ -8,7 +8,6 @@ use App\Models\Question;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AssessmentAnswerFileTest extends TestCase
@@ -17,8 +16,6 @@ class AssessmentAnswerFileTest extends TestCase
 
     public function test_uploaded_evidence_is_returned_when_assessment_is_reopened_and_can_be_opened(): void
     {
-        Storage::fake('evidence');
-
         $user = User::factory()->create();
         $assessment = Assessment::create([
             'user_id' => $user->id,
@@ -39,17 +36,27 @@ class AssessmentAnswerFileTest extends TestCase
             'answer' => 'Diterapkan',
         ]);
 
+        $fileContents = "%PDF-1.4\nEvidence\0contents";
+
         $uploadResponse = $this->actingAs($user)
             ->post(
                 "/api/assessments/{$assessment->id}/answers/{$answer->id}/files",
                 [
-                    'file' => UploadedFile::fake()
-                        ->create('evidence.pdf', 10, 'application/pdf'),
+                    'file' => UploadedFile::fake()->createWithContent(
+                        'evidence.pdf',
+                        $fileContents
+                    ),
                 ]
             )
             ->assertCreated();
 
         $fileUrl = $uploadResponse->json('data.url');
+        $fileId = $uploadResponse->json('data.id');
+
+        $this->assertDatabaseHas('assessment_answer_files', [
+            'id' => $fileId,
+            'file_contents' => $fileContents,
+        ]);
 
         $this->getJson("/api/assessments/{$assessment->id}")
             ->assertOk()
@@ -62,18 +69,21 @@ class AssessmentAnswerFileTest extends TestCase
                 'evidence.pdf'
             );
 
+        $this->assertArrayNotHasKey(
+            'file_contents',
+            $this->getJson("/api/assessments/{$assessment->id}")
+                ->json('data.answers.0.files.0')
+        );
+
         $this->get($fileUrl)
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf')
-            ->assertHeader('content-disposition', 'inline; filename=evidence.pdf');
+            ->assertHeader('content-disposition', 'inline; filename=evidence.pdf')
+            ->assertContent($fileContents);
     }
 
-    public function test_production_upload_requires_configured_persistent_storage(): void
+    public function test_evidence_upload_does_not_require_object_storage_credentials(): void
     {
-        config([
-            'filesystems.disks.evidence.require_s3' => true,
-        ]);
-
         $user = User::factory()->create();
         $assessment = Assessment::create([
             'user_id' => $user->id,
@@ -102,14 +112,6 @@ class AssessmentAnswerFileTest extends TestCase
                         ->create('evidence.pdf', 10, 'application/pdf'),
                 ]
             )
-            ->assertServiceUnavailable()
-            ->assertJsonPath('success', false)
-            ->assertJsonPath(
-                'message',
-                'Penyimpanan evidence belum dikonfigurasi. '
-                .'Atur AWS_BUCKET, AWS_DEFAULT_REGION, '
-                .'AWS_ACCESS_KEY_ID, dan AWS_SECRET_ACCESS_KEY '
-                .'pada environment Vercel.'
-            );
+            ->assertCreated();
     }
 }

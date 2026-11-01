@@ -14,6 +14,11 @@ class AssessmentAnswerFile extends Model
         'file_path',
         'mime_type',
         'file_size',
+        'file_contents',
+    ];
+
+    protected $hidden = [
+        'file_contents',
     ];
 
     protected $casts = [

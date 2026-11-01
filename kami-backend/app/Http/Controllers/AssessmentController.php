@@ -84,7 +84,7 @@ class AssessmentController extends Controller
     {
         $assessment->load([
             'answers.question',
-            'answers.files',
+            'answers.files:id,assessment_answer_id,original_name,file_name,file_path,mime_type,file_size,created_at',
             'additionalAnswers.question',
         ]);
 

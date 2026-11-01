@@ -8,8 +8,7 @@ This project uses the community `vercel-php` runtime because Vercel does not pro
 
 Before deploying, prepare:
 
-- A managed MySQL database reachable from Vercel Functions.
-- An S3-compatible bucket for evidence uploads. Vercel Function filesystems are read-only/temporary; local uploads do not persist between invocations. Vercel always uses the S3 evidence disk, even if `EVIDENCE_FILESYSTEM_DRIVER=local` is set, and rejects uploads with a clear error if its bucket or region is missing.
+- A managed MySQL database such as Aiven, reachable from Vercel Functions. Evidence file contents are stored in the `assessment_answer_files` table, so no AWS/S3 bucket or other file-storage service is needed. Vercel's request-size limit means each evidence file is limited to 4 MB.
 - A production `APP_KEY` generated with `php artisan key:generate --show`.
 
 ### Import the project
@@ -48,16 +47,9 @@ SANCTUM_STATEFUL_DOMAINS=website-assesment.vercel.app
 CACHE_STORE=database
 QUEUE_CONNECTION=sync
 LOG_CHANNEL=stderr
-
-AWS_ACCESS_KEY_ID=YOUR_S3_ACCESS_KEY
-AWS_SECRET_ACCESS_KEY=YOUR_S3_SECRET
-AWS_DEFAULT_REGION=YOUR_BUCKET_REGION
-AWS_BUCKET=YOUR_BUCKET_NAME
-AWS_ENDPOINT=
-AWS_USE_PATH_STYLE_ENDPOINT=false
 ```
 
-Vercel deployment and production domains are added to Sanctum's stateful domains automatically. Add any custom domain to `SANCTUM_STATEFUL_DOMAINS` too, separated by commas and without `https://`. Keep `SESSION_DOMAIN` unset so the session cookie stays restricted to the current host. Vercel automatically uses the S3 evidence disk; do not set `EVIDENCE_FILESYSTEM_DRIVER=local`. Configure the bucket name, region, access key, and secret above or evidence uploads will return a configuration error. Evidence is read through the authenticated application endpoint and stored as private objects, so the S3-compatible bucket can remain private. Set `LOG_CHANNEL=stderr` on Vercel so Laravel logs go to the function logs rather than the read-only filesystem. For a regional S3-compatible provider, set its endpoint and path-style setting according to that provider's instructions.
+Vercel deployment and production domains are added to Sanctum's stateful domains automatically. Add any custom domain to `SANCTUM_STATEFUL_DOMAINS` too, separated by commas and without `https://`. Keep `SESSION_DOMAIN` unset so the session cookie stays restricted to the current host. Evidence uploads are stored as binary data in Aiven MySQL and served by the authenticated application endpoint; no object-storage credentials are required. Set `LOG_CHANNEL=stderr` on Vercel so Laravel logs go to the function logs rather than the read-only filesystem.
 
 Set `APP_URL` to the HTTPS URL that users open. The application also trusts Vercel's forwarded protocol header in production so Laravel generates HTTPS asset URLs when requests arrive through Vercel's HTTPS proxy.
 
